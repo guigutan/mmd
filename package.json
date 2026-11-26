@@ -9,7 +9,7 @@
     "test": "playwright test",
     "build": "npm run check && vite build",
     "preview": "vite preview --host 127.0.0.1",
-    "deploy:workers": "npm run build && wrangler deploy"
+    "deploy:workers": "npm run build && wrangler deploy --config wrangler.workers.jsonc"
   },
   "engines": {
     "node": ">=22.12.0"
