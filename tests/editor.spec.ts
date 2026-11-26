@@ -226,3 +226,18 @@ test('移动端可操作且页面不横向溢出', async ({ page }, testInfo) =>
   await page.screenshot({ path: testInfo.outputPath('desktop.png'), fullPage: true });
   expect(pageErrors).toEqual([]);
 });
+
+ test('紧凑布局为四比六，新页签显示当前图表', async ({ page, context }, testInfo) => {
+  await ready(page);
+  await expect(page.locator('.document-bar')).toHaveCount(0);
+  const editor = await page.locator('.editor-panel').boundingBox();
+  const preview = await page.locator('.preview-panel').boundingBox();
+  expect(editor!.width / preview!.width).toBeCloseTo(2 / 3, 2);
+  const opened = context.waitForEvent('page');
+  await page.getByRole('button', { name: '新页签预览', exact: true }).click();
+  const popup = await opened;
+  await popup.waitForLoadState();
+  await expect(popup.locator('svg')).toContainText('一个好想法');
+  await page.screenshot({path: testInfo.outputPath('compact-desktop.png'), fullPage:true});
+  await popup.close();
+ });

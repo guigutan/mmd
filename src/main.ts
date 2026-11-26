@@ -1,7 +1,7 @@
 import mermaid from "mermaid";
 import { createEditor } from "./editor";
 import { templates } from "./templates";
-import { exportSvg, exportPng, type ExportOptions } from "./export";
+import { exportSvg, exportPng, serializeSvg, type ExportOptions } from "./export";
 import "./style.css";
 
 const icons: Record<string, string> = {
@@ -15,6 +15,7 @@ const icons: Record<string, string> = {
     '<path d="M12 16V3m-5 5 5-5 5 5M4 16v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4"/>',
   check: '<path d="m5 12 4 4L19 6"/>',
   fit: '<path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/><rect x="8" y="8" width="8" height="8" rx="1"/>',
+  external: '<path d="M14 3h7v7m0-7L10 14M10 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5"/>',
   plus: '<path d="M12 5v14M5 12h14"/>',
   minus: '<path d="M5 12h14"/>',
   file: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M8 13h8m-8 4h5"/>',
@@ -28,13 +29,11 @@ document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
   <header class="site-header">
     <a class="brand" href="./" aria-label="Mermaid Lite 首页"><img src="/favicon.svg" alt="" width="34" height="34"><span>Mermaid <b>Lite</b></span></a>
     <span class="brand-description">让思路成图</span>
+    <input id="filename" class="compact-filename" aria-label="图表名称" value="我的第一张图" maxlength="80">
+    <div class="export-actions"><button id="export-svg" class="button secondary" disabled>${icon("download")}导出 SVG</button><button id="export-png" class="button primary" disabled>${icon("download")}导出 PNG</button></div>
     <a class="docs-link" href="https://mermaid.js.org/intro/" target="_blank" rel="noopener noreferrer">${icon("book")}<span>语法指南</span></a>
   </header>
   <main>
-    <section class="document-bar" aria-label="图表与导出">
-      <div class="document-info"><div class="eyebrow">YOUR DIAGRAM, SIMPLIFIED</div><div class="title-row"><input id="filename" aria-label="图表名称" value="我的第一张图" maxlength="80"><span class="file-extension">.mmd</span></div><p>写下想法，实时成图。</p></div>
-      <div class="export-actions"><button id="export-svg" class="button secondary" disabled>${icon("download")}导出 SVG<span class="button-tag">矢量</span></button><button id="export-png" class="button primary" disabled>${icon("download")}导出 PNG</button></div>
-    </section>
     <section class="workspace" aria-label="图表编辑工作区">
       <section class="editor-panel" aria-label="代码">
         <div class="panel-toolbar"><h2>${icon("code")}代码</h2><div class="toolbar-actions"><label class="sr-only" for="template">插入示例</label><select id="template"><option value="">插入示例</option>${Object.entries(
@@ -51,7 +50,7 @@ document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
       </section>
       <section class="preview-panel" aria-label="图表预览">
         <div class="panel-toolbar"><h2>${icon("image")}预览 <span class="live-label">实时</span></h2><label class="theme-control">主题<select id="theme" aria-label="图表主题"><option value="base">简约</option><option value="neutral">黑白</option><option value="forest">森林</option><option value="dark">深色</option></select></label></div>
-        <div class="preview-body"><div id="viewport" aria-label="图表画布"><div id="diagram-frame"><div id="diagram"></div></div></div><div id="empty-state" class="empty-state" hidden>${icon("code")}<p>从第一行代码开始</p><span>在左侧输入 Mermaid，或插入一个示例。</span></div><div class="zoom-controls" aria-label="预览缩放"><button id="zoom-out" class="icon-button" title="缩小" aria-label="缩小">${icon("minus")}</button><output id="zoom-label">100%</output><button id="zoom-in" class="icon-button" title="放大" aria-label="放大">${icon("plus")}</button><span></span><button id="fit" class="icon-button" title="适应画布" aria-label="适应画布">${icon("fit")}</button></div></div>
+        <div class="preview-body"><div id="viewport" aria-label="图表画布"><div id="diagram-frame"><div id="diagram"></div></div></div><div id="empty-state" class="empty-state" hidden>${icon("code")}<p>从第一行代码开始</p><span>在左侧输入 Mermaid，或插入一个示例。</span></div><div class="zoom-controls" aria-label="预览缩放"><button id="zoom-out" class="icon-button" title="缩小" aria-label="缩小">${icon("minus")}</button><output id="zoom-label">100%</output><button id="zoom-in" class="icon-button" title="放大" aria-label="放大">${icon("plus")}</button><span></span><button id="fit" class="icon-button" title="适应画布" aria-label="适应画布">${icon("fit")}</button><button id="open-preview" class="icon-button" title="新页签预览" aria-label="新页签预览" disabled>${icon("external")}</button></div></div>
         <div class="preview-footer"><span id="render-status" role="status">正在准备画布…</span><span id="dimensions"></span></div>
       </section>
     </section>
@@ -157,6 +156,7 @@ if (!storageAvailable)
   $("save-status").textContent = "无法读取本地草稿，请下载源码备份";
 
 function updateExportButtons() {
+  $<HTMLButtonElement>("open-preview").disabled = !currentSvg || renderedRevision !== revision;
   svgButton.disabled = pngButton.disabled =
     exporting || !currentSvg || renderedRevision !== revision;
 }
@@ -289,6 +289,16 @@ $("zoom-out").onclick = () => {
   applyZoom();
 };
 $("fit").onclick = fit;
+$("open-preview").onclick = () => {
+  if (!currentSvg || renderedRevision !== revision) return;
+  try {
+    const { source } = serializeSvg(currentSvg, theme.value === "dark" ? "dark" : "white");
+    const url = URL.createObjectURL(new Blob([source], { type: "image/svg+xml;charset=utf-8" }));
+    const link = document.createElement("a");
+    link.href = url; link.target = "_blank"; link.rel = "noopener noreferrer"; link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  } catch (error) { toast(error instanceof Error ? error.message : "无法打开预览"); }
+};
 let fitFrame = 0;
 new ResizeObserver(() => {
   cancelAnimationFrame(fitFrame);
