@@ -29,8 +29,6 @@ document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
   <header class="site-header">
     <a class="brand" href="./" aria-label="Mermaid Lite 首页"><img src="/favicon.svg" alt="" width="34" height="34"><span>Mermaid <b>Lite</b></span></a>
     <span class="brand-description">让思路成图</span>
-    <input id="filename" class="compact-filename" aria-label="图表名称" value="我的第一张图" maxlength="80">
-    <div class="export-actions"><button id="export-svg" class="button secondary" disabled>${icon("download")}导出 SVG</button><button id="export-png" class="button primary" disabled>${icon("download")}导出 PNG</button></div>
     <a class="docs-link" href="https://mermaid.js.org/intro/" target="_blank" rel="noopener noreferrer">${icon("book")}<span>语法指南</span></a>
   </header>
   <main>
@@ -49,15 +47,14 @@ document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
         <div class="editor-footer"><span id="line-count">Mermaid</span><button id="save-source" class="text-button" title="下载 Mermaid 源文件">保存源码 ${icon("download")}</button></div>
       </section>
       <section class="preview-panel" aria-label="图表预览">
-        <div class="panel-toolbar"><h2>${icon("image")}预览 <span class="live-label">实时</span></h2><label class="theme-control">主题<select id="theme" aria-label="图表主题"><option value="base">简约</option><option value="neutral">黑白</option><option value="forest">森林</option><option value="dark">深色</option></select></label></div>
+        <div class="panel-toolbar"><h2>${icon("image")}预览 <span class="live-label">实时</span></h2><div class="preview-tools"><div class="export-settings"><label class="checkbox-label"><input id="transparent" type="checkbox">透明背景</label><label class="scale-control">PNG 清晰度<select id="scale"><option value="1">1× 标准</option><option value="2" selected>2× 高清</option><option value="3">3× 超清</option></select></label></div><div class="export-actions"><button id="export-svg" class="button secondary" disabled>${icon("download")}导出 SVG</button><button id="export-png" class="button primary" disabled>${icon("download")}导出 PNG</button></div><label class="theme-control">主题<select id="theme" aria-label="图表主题"><option value="base">简约</option><option value="neutral">黑白</option><option value="forest">森林</option><option value="dark">深色</option></select></label></div></div>
         <div class="preview-body"><div id="viewport" aria-label="图表画布"><div id="diagram-frame"><div id="diagram"></div></div></div><div id="empty-state" class="empty-state" hidden>${icon("code")}<p>从第一行代码开始</p><span>在左侧输入 Mermaid，或插入一个示例。</span></div><div class="zoom-controls" aria-label="预览缩放"><button id="zoom-out" class="icon-button" title="缩小" aria-label="缩小">${icon("minus")}</button><output id="zoom-label">100%</output><button id="zoom-in" class="icon-button" title="放大" aria-label="放大">${icon("plus")}</button><span></span><button id="fit" class="icon-button" title="适应画布" aria-label="适应画布">${icon("fit")}</button><button id="open-preview" class="icon-button" title="新页签预览" aria-label="新页签预览" disabled>${icon("external")}</button></div></div>
         <div class="preview-footer"><span id="render-status" role="status">正在准备画布…</span><span id="dimensions"></span></div>
       </section>
     </section>
     <div id="error-box" role="alert" hidden><div><strong>暂时无法生成图表</strong><span>请检查代码。当前预览可能是上一次的结果。</span></div><pre id="error-message"></pre></div>
-    <section class="bottom-bar" aria-label="导出设置"><div class="export-settings"><span class="settings-title">导出设置</span><label class="checkbox-label"><input id="transparent" type="checkbox">透明背景</label><span class="settings-divider"></span><label class="scale-control">PNG 清晰度<select id="scale"><option value="1">1× 标准</option><option value="2" selected>2× 高清</option><option value="3">3× 超清</option></select></label></div><span class="local-note" id="save-status">${icon("lock")}仅保存在此浏览器</span></section>
-    <footer class="page-footer"><span>简单一点，思路清晰一点。</span><span>SVG 适合 PPT / 文档 <span class="footer-dot">·</span> PNG 适合日常分享</span></footer>
   </main>
+  <input id="filename" type="hidden" value="我的第一张图"><span id="save-status" hidden></span>
   <input id="file-input" type="file" accept=".mmd,.mermaid,.txt,text/plain" hidden>
   <div id="render-container" aria-hidden="true"></div>
   <div id="toast" role="status" hidden></div>

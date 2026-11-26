@@ -104,7 +104,7 @@ for (const [template, expectedText] of [
 test('刷新后恢复代码、名称、主题与导出设置', async ({ page }) => {
   await ready(page);
   await setCode(page, validCode);
-  await page.getByLabel('图表名称').fill('持久化测试图');
+  await page.locator('#file-input').setInputFiles({name:'持久化测试图.mmd', mimeType:'text/plain', buffer:Buffer.from(validCode)});
   await page.getByLabel('图表主题').selectOption('neutral');
   await page.getByLabel('透明背景').check();
   await page.locator('#scale').selectOption('3');
@@ -116,7 +116,7 @@ test('刷新后恢复代码、名称、主题与导出设置', async ({ page }) 
 
   await page.reload();
   await expect(page.locator('#diagram > svg')).toContainText('中文测试起点');
-  await expect(page.getByLabel('图表名称')).toHaveValue('持久化测试图');
+  await expect(page.locator('#filename')).toHaveValue('持久化测试图');
   await expect(page.getByLabel('图表主题')).toHaveValue('neutral');
   await expect(page.getByLabel('透明背景')).toBeChecked();
   await expect(page.locator('#scale')).toHaveValue('3');
@@ -145,7 +145,7 @@ test('实际下载 SVG 与 PNG，尺寸、中文和透明背景均正确', async
   await ready(page);
   await setCode(page, validCode);
   await expect(page.locator('#diagram > svg')).toContainText('中文测试起点');
-  await page.getByLabel('图表名称').fill('中文导出测试');
+  await page.locator('#file-input').setInputFiles({name:'中文导出测试.mmd', mimeType:'text/plain', buffer:Buffer.from(validCode)});
 
   const dimensions = await page.locator('#diagram > svg').evaluate((node) => {
     const box = (node as SVGSVGElement).viewBox.baseVal;
@@ -229,7 +229,9 @@ test('移动端可操作且页面不横向溢出', async ({ page }, testInfo) =>
 
  test('紧凑布局为四比六，新页签显示当前图表', async ({ page, context }, testInfo) => {
   await ready(page);
-  await expect(page.locator('.document-bar')).toHaveCount(0);
+  await expect(page.locator('.document-bar, .bottom-bar, .page-footer')).toHaveCount(0);
+  await expect(page.locator('.preview-panel .export-actions')).toBeVisible();
+  await expect(page.locator('.preview-panel .export-settings')).toBeVisible();
   const editor = await page.locator('.editor-panel').boundingBox();
   const preview = await page.locator('.preview-panel').boundingBox();
   expect(editor!.width / preview!.width).toBeCloseTo(2 / 3, 2);
