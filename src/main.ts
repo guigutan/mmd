@@ -1,8 +1,9 @@
 import mermaid from "mermaid";
 import { createEditor } from "./editor";
 import { templates } from "./templates";
-import { exportSvg, exportPng, serializeSvg, type ExportOptions } from "./export";
+import { exportSvg, exportPng, type ExportOptions } from "./export";
 import "./style.css";
+import { createPreviewUrl } from "./preview";
 
 const icons: Record<string, string> = {
   code: '<path d="m8 7-5 5 5 5m8-10 5 5-5 5m-3-13-2 16"/>',
@@ -27,8 +28,8 @@ const icon = (name: string) =>
 
 document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
   <header class="site-header">
-    <a class="brand" href="./" aria-label="Mermaid Lite 首页"><img src="/favicon.svg" alt="" width="34" height="34"><span>Mermaid <b>Lite</b></span></a>
-    <span class="brand-description">让思路成图</span>
+    <a class="brand" href="./" aria-label="Mermaid mmd 首页"><img src="/favicon.svg" alt="" width="34" height="34"><span>Mermaid <b>mmd</b></span></a>
+    <span class="brand-description">mmd.tanxianzhong.com</span>
     <a class="docs-link" href="https://mermaid.js.org/intro/" target="_blank" rel="noopener noreferrer">${icon("book")}<span>语法指南</span></a>
   </header>
   <main>
@@ -289,8 +290,7 @@ $("fit").onclick = fit;
 $("open-preview").onclick = () => {
   if (!currentSvg || renderedRevision !== revision) return;
   try {
-    const { source } = serializeSvg(currentSvg, theme.value === "dark" ? "dark" : "white");
-    const url = URL.createObjectURL(new Blob([source], { type: "image/svg+xml;charset=utf-8" }));
+    const url = createPreviewUrl(currentSvg, theme.value === "dark");
     const link = document.createElement("a");
     link.href = url; link.target = "_blank"; link.rel = "noopener noreferrer"; link.click();
     setTimeout(() => URL.revokeObjectURL(url), 60_000);

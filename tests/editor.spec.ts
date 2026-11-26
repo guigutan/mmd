@@ -53,7 +53,7 @@ async function pixelStats(page: Page, png: Buffer) {
 
 test('初始中文图表正常显示，导出按钮可用', async ({ page }) => {
   await ready(page);
-  await expect(page).toHaveTitle('Mermaid Lite · 让思路成图');
+  await expect(page).toHaveTitle('Mermaid mmd · 让思路成图');
   await expect(page.locator('#diagram > svg')).toContainText('一个好想法');
   await expect(page.locator('#diagram > svg')).toContainText('PNG 高清图');
   await expect(page.locator('#error-box')).toBeHidden();
@@ -240,6 +240,18 @@ test('移动端可操作且页面不横向溢出', async ({ page }, testInfo) =>
   const popup = await opened;
   await popup.waitForLoadState();
   await expect(popup.locator('svg')).toContainText('一个好想法');
+  const initialZoom = await popup.locator('#level').innerText();
+  await popup.mouse.move(700, 400);
+  await popup.mouse.wheel(0, -300);
+  await expect(popup.locator('#level')).not.toHaveText(initialZoom);
+  const transformBefore = await popup.locator('#diagram').getAttribute('style');
+  await popup.mouse.move(500, 300); await popup.mouse.down();
+  await popup.mouse.move(600, 350); await popup.mouse.up();
+  expect(await popup.locator('#diagram').getAttribute('style')).not.toBe(transformBefore);
+  await popup.getByRole('button', { name:'适应窗口' }).click();
+  await expect(popup.locator('#level')).toHaveText(initialZoom);
+  await popup.getByRole('button', { name:'原始大小' }).click();
+  await expect(popup.locator('#level')).toHaveText('100%');
   await page.screenshot({path: testInfo.outputPath('compact-desktop.png'), fullPage:true});
   await popup.close();
  });
